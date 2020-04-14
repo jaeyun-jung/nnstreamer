@@ -60,6 +60,13 @@ NNS_API_INCLUDES := \
 NNS_API_FLAGS := -DVERSION=\"$(NNSTREAMER_VERSION)\"
 NNS_SUBPLUGINS :=
 
+# Set true for profiling log
+ENABLE_PROFILE := false
+
+ifeq ($(ENABLE_PROFILE),true)
+NNS_API_FLAGS += -DNNS_PROFILE_LOG=1
+endif
+
 ifeq ($(NNSTREAMER_API_OPTION),single)
 NNS_API_FLAGS += -DNNS_SINGLE_ONLY=1
 endif

@@ -20,6 +20,7 @@ option('grpc-support', type: 'feature', value: 'auto')
 
 # booleans & other options
 option('enable-test', type: 'boolean', value: true)
+option('enable-profile', type: 'boolean', value: false)
 option('install-test', type: 'boolean', value: false)
 option('enable-pytorch-use-gpu', type: 'boolean', value: false) # default value, can be specified at run time
 option('tflite2-gpu-delegate-support', type: 'boolean', value: 'false')

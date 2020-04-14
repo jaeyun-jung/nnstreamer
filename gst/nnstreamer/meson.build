@@ -36,6 +36,10 @@ nnst_common_sources = [
   'tensor_common_pipeline.c'
 ]
 
+if get_option('enable-profile')
+  nnst_common_sources += 'nnstreamer_profile.c'
+endif
+
 foreach s : nnst_common_sources
   nnstreamer_sources += join_paths(meson.current_source_dir(), s)
 endforeach
