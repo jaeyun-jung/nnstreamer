@@ -221,6 +221,8 @@ nns_native_single_invoke (JNIEnv * env, jobject thiz, jlong handle, jobject in)
   jobject result = NULL;
   gboolean failed = FALSE;
 
+  profile_log ("nativeInvoke", PROFILE_START);
+
   pipe_info = CAST_TO_TYPE (handle, pipeline_info_s *);
   priv = (singleshot_priv_data_s *) pipe_info->priv_data;
   single = pipe_info->pipeline_handle;
@@ -257,6 +259,10 @@ done:
   /* do not free input/output tensors (direct access from object) */
   g_free (in_data);
   g_free (out_data);
+
+  if (result != NULL)
+    profile_log ("nativeInvoke", PROFILE_END);
+
   return result;
 }
 

@@ -27,6 +27,7 @@
 #include <nnstreamer_plugin_api.h>
 
 #include "tensor_filter_single.h"
+#include "nnstreamer_profile.h"
 
 #define ML_SINGLE_MAGIC 0xfeedfeed
 
@@ -955,6 +956,8 @@ _ml_single_invoke_internal (ml_single_h single,
   gint64 end_time;
   int status = ML_ERROR_NONE;
 
+  profile_log ("ml_single_invoke", PROFILE_START);
+
   check_feature_state ();
 
   if (G_UNLIKELY (!single)) {
@@ -1124,6 +1127,9 @@ ml_single_get_tensors_info (ml_single_h single, gboolean is_input,
 
 exit:
   ML_SINGLE_HANDLE_UNLOCK (single_h);
+
+  if (status == ML_ERROR_NONE)
+    profile_log ("ml_single_invoke", PROFILE_END);
   return status;
 }
 

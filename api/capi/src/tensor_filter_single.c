@@ -44,6 +44,7 @@
 #include <string.h>
 
 #include "tensor_filter_single.h"
+#include "nnstreamer_profile.h"
 
 #define g_tensor_filter_single_parent_class parent_class
 G_DEFINE_TYPE (GTensorFilterSingle, g_tensor_filter_single, G_TYPE_OBJECT);
@@ -330,6 +331,7 @@ g_tensor_filter_single_invoke (GTensorFilterSingle * self,
     }
   }
 
+  profile_log ("single-invoke", PROFILE_START);
   GST_TF_FW_INVOKE_COMPAT (priv, status, input, _out);
 
   if (status == 0) {
@@ -340,6 +342,7 @@ g_tensor_filter_single_invoke (GTensorFilterSingle * self,
       g_tensor_filter_destroy_notify (self, _out);
     }
 
+    profile_log ("single-invoke", PROFILE_END);
     return TRUE;
   }
 
