@@ -503,7 +503,22 @@ if [[ -e "$nnstreamer_android_api_lib" ]]; then
     nnstreamer_static_libs="$nnstreamer_lib_name-static-libs-$today.zip"
     zip -r $nnstreamer_static_libs ndk_static
 
-    rm -rf aar_extracted main ndk_static
+    # Prepare javadoc
+    javadoc_dir="$nnstreamer_lib_name-javadoc"
+    javadoc_title="NNStreamer Android API"
+
+    mkdir -p $javadoc_dir
+
+    javadoc -d $javadoc_dir \
+        -doctitle '$javadoc_title' -windowtitle '$javadoc_title' \
+        -classpath api/src/main/java/org/nnsuite/nnstreamer \
+        -public -splitindex -link https://docs.oracle.com/javase/8/docs/api/ -Xdoclint:none \
+        api/src/main/java/org/nnsuite/nnstreamer/*
+
+    nnstreamer_javadoc="$nnstreamer_lib_name-javadoc-$today.zip"
+    zip -r $nnstreamer_javadoc $javadoc_dir
+
+    rm -rf aar_extracted main ndk_static $javadoc_dir
 
     # Upload to jcenter
     if [[ $release_bintray == "yes" ]]; then
@@ -534,6 +549,7 @@ if [[ -e "$nnstreamer_android_api_lib" ]]; then
         cp $nnstreamer_android_api_lib $result_dir/$nnstreamer_lib_name-$today.aar
         cp $nnstreamer_native_files $result_dir
         cp $nnstreamer_static_libs $result_dir
+        cp $nnstreamer_javadoc $result_dir
     fi
 else
     echo "Failed to build NNStreamer library."
