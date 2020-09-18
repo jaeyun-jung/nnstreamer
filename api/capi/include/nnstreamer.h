@@ -1068,6 +1068,20 @@ int ml_tensors_info_get_tensor_size (ml_tensors_info_h info, int index, size_t *
 int ml_tensors_data_create (const ml_tensors_info_h info, ml_tensors_data_h *data);
 
 /**
+ * @brief Creates a tensor data frame without tensor buffer with the given tensors information.
+ * @details Note that this function does not allocate the memory for tensor. An application should set a buffer using ml_tensors_data_replace_tensor_data().
+ * @since_tizen 6.5
+ * @param[in] info The handle of tensors information.
+ * @param[out] data The handle of tensors data. The caller is responsible for freeing the allocated data with ml_tensors_data_destroy().
+ * @return @c 0 on success. Otherwise a negative error value.
+ * @retval #ML_ERROR_NONE Successful.
+ * @retval #ML_ERROR_NOT_SUPPORTED Not supported.
+ * @retval #ML_ERROR_INVALID_PARAMETER Given parameter is invalid.
+ * @retval #ML_ERROR_OUT_OF_MEMORY Failed to allocate required memory.
+ */
+int ml_tensors_data_create_empty (const ml_tensors_info_h info, ml_tensors_data_h *data);
+
+/**
  * @brief Frees the given tensors' data handle.
  * @since_tizen 5.5
  * @param[in] data The handle of tensors data.
@@ -1106,6 +1120,21 @@ int ml_tensors_data_get_tensor_data (ml_tensors_data_h data, unsigned int index,
  * @retval #ML_ERROR_INVALID_PARAMETER Given parameter is invalid.
  */
 int ml_tensors_data_set_tensor_data (ml_tensors_data_h data, unsigned int index, const void *raw_data, const size_t data_size);
+
+/**
+ * @brief Replace a tensor data in given handle.
+ * @details Note that this function takes ownership of @a raw_data and thus do not free the data.
+ * @since_tizen 6.5
+ * @param[in] data The handle of tensors data.
+ * @param[in] index The index of the tensor.
+ * @param[in] raw_data Raw tensor data to be replaced.
+ * @param[in] data_size Byte size of raw data.
+ * @return @c 0 on success. Otherwise a negative error value.
+ * @retval #ML_ERROR_NONE Successful.
+ * @retval #ML_ERROR_NOT_SUPPORTED Not supported.
+ * @retval #ML_ERROR_INVALID_PARAMETER Given parameter is invalid.
+ */
+int ml_tensors_data_replace_tensor_data (ml_tensors_data_h data, unsigned int index, void *raw_data, const size_t data_size);
 
 /**
  * @brief Checks the availability of the given execution environments.

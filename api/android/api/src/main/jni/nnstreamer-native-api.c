@@ -473,10 +473,8 @@ nns_parse_tensors_data (pipeline_info_s * pipe_info, JNIEnv * env,
   g_return_val_if_fail (obj_data, FALSE);
   g_return_val_if_fail (data_h, FALSE);
 
-  if (*data_h == NULL &&
-      ml_tensors_data_create_no_alloc (NULL, data_h) != ML_ERROR_NONE) {
-    nns_loge ("Failed to create handle for tensors data.");
-    return FALSE;
+  if (*data_h == NULL) {
+    *data_h = g_new0 (ml_tensors_data_s, 1);
   }
 
   dcls_info = &pipe_info->data_cls_info;

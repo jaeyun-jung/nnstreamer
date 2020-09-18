@@ -567,46 +567,6 @@ ml_tensors_data_destroy (ml_tensors_data_h data)
 }
 
 /**
- * @brief Allocates a tensor data frame with the given tensors info. (more info in nnstreamer.h)
- * @note Memory for data buffer is not allocated.
- */
-int
-ml_tensors_data_create_no_alloc (const ml_tensors_info_h info,
-    ml_tensors_data_h * data)
-{
-  ml_tensors_data_s *_data;
-  ml_tensors_info_s *_info;
-  gint i;
-
-  check_feature_state ();
-
-  if (data == NULL)
-    return ML_ERROR_INVALID_PARAMETER;
-
-  /* init null */
-  *data = NULL;
-
-  _data = g_new0 (ml_tensors_data_s, 1);
-  if (!_data) {
-    ml_loge ("Failed to allocate the tensors data handle.");
-    return ML_ERROR_OUT_OF_MEMORY;
-  }
-
-  _data->handle = NULL;
-  _info = (ml_tensors_info_s *) info;
-  if (_info != NULL) {
-    _data->num_tensors = _info->num_tensors;
-    for (i = 0; i < _data->num_tensors; i++) {
-      _data->tensors[i].size = ml_tensor_info_get_size (&_info->info[i]);
-      _data->tensors[i].tensor = NULL;
-    }
-  }
-
-  *data = _data;
-  return ML_ERROR_NONE;
-}
-
-/**
  * @brief Clones the given tensor data frame from the given tensors data. (more info in nnstreamer.h)
  * @note Memory ptr for data buffer is copied. No new memory for data buffer is allocated.
  */
@@ -645,9 +605,38 @@ ml_tensors_data_clone_no_alloc (const ml_tensors_data_s * data_src,
 int
 ml_tensors_data_create (const ml_tensors_info_h info, ml_tensors_data_h * data)
 {
-  gint status = ML_ERROR_STREAMS_PIPE;
+  int status;
   ml_tensors_data_s *_data = NULL;
-  gint i;
+  guint i;
+
+  status = ml_tensors_data_create_empty (info, data);
+  if (status != ML_ERROR_NONE)
+    return status;
+
+  /* allocate tensor */
+  _data = (ml_tensors_data_s *) *data;
+  for (i = 0; i < _data->num_tensors; i++) {
+    _data->tensors[i].tensor = g_malloc0 (_data->tensors[i].size);
+    if (_data->tensors[i].tensor == NULL) {
+      ml_loge ("Failed to allocate the memory block.");
+      ml_tensors_data_destroy (*data);
+      *data = NULL;
+      return ML_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  return ML_ERROR_NONE;
+}
+
+/**
+ * @brief Creates a tensor data frame without tensor buffer with the given tensors information. (more info in nnstreamer.h)
+ */
+int
+ml_tensors_data_create_empty (const ml_tensors_info_h info, ml_tensors_data_h *data)
+{
+  ml_tensors_data_s *_data;
+  ml_tensors_info_s *_info;
+  guint i;
 
   check_feature_state ();
 
@@ -659,32 +648,22 @@ ml_tensors_data_create (const ml_tensors_info_h info, ml_tensors_data_h * data)
     return ML_ERROR_INVALID_PARAMETER;
   }
 
-  status =
-      ml_tensors_data_create_no_alloc (info, (ml_tensors_data_h *) & _data);
-
-  if (status != ML_ERROR_NONE) {
-    return status;
+  _info = (ml_tensors_info_s *) info;
+  *data = _data = g_try_new0 (ml_tensors_data_s, 1);
+  if (!_data) {
+    ml_loge ("Failed to allocate the tensors data handle.");
+    return ML_ERROR_OUT_OF_MEMORY;
   }
+
+  _data->num_tensors = _info->num_tensors;
+  _data->handle = NULL;
 
   for (i = 0; i < _data->num_tensors; i++) {
-    _data->tensors[i].tensor = g_malloc0 (_data->tensors[i].size);
-    if (_data->tensors[i].tensor == NULL) {
-      status = ML_ERROR_OUT_OF_MEMORY;
-      goto failed;
-    }
+    _data->tensors[i].size = ml_tensor_info_get_size (&_info->info[i]);
+    _data->tensors[i].tensor = NULL;
   }
 
-  *data = _data;
   return ML_ERROR_NONE;
-
-failed:
-  for (i = 0; i < _data->num_tensors; i++) {
-    g_free (_data->tensors[i].tensor);
-  }
-  g_free (_data);
-
-  ml_loge ("Failed to allocate the memory block.");
-  return status;
 }
 
 /**
@@ -713,10 +692,10 @@ ml_tensors_data_get_tensor_data (ml_tensors_data_h data, unsigned int index,
 }
 
 /**
- * @brief Copies a tensor data to given handle.
+ * @brief Internal function to validate tensor data.
  */
-int
-ml_tensors_data_set_tensor_data (ml_tensors_data_h data, unsigned int index,
+static int
+_ml_tensors_data_validate_data (ml_tensors_data_h data, unsigned int index,
     const void *raw_data, const size_t data_size)
 {
   ml_tensors_data_s *_data;
@@ -731,11 +710,56 @@ ml_tensors_data_set_tensor_data (ml_tensors_data_h data, unsigned int index,
   if (_data->num_tensors <= index)
     return ML_ERROR_INVALID_PARAMETER;
 
-  if (data_size <= 0 || _data->tensors[index].size < data_size)
+  if (data_size <= 0 || _data->tensors[index].size != data_size)
     return ML_ERROR_INVALID_PARAMETER;
+
+  return ML_ERROR_NONE;
+}
+
+/**
+ * @brief Copies a tensor data to given handle.
+ */
+int
+ml_tensors_data_set_tensor_data (ml_tensors_data_h data, unsigned int index,
+    const void *raw_data, const size_t data_size)
+{
+  int status;
+  ml_tensors_data_s *_data;
+
+  status = _ml_tensors_data_validate_data (data, index, raw_data, data_size);
+  if (status != ML_ERROR_NONE)
+    return status;
+
+  _data = (ml_tensors_data_s *) data;
+
+  if (_data->tensors[index].tensor == NULL) {
+    /* maybe data handle was created using ml_tensors_data_create_empty() */
+    _data->tensors[index].tensor = g_malloc0 (_data->tensors[index].size);
+  }
 
   if (_data->tensors[index].tensor != raw_data)
     memcpy (_data->tensors[index].tensor, raw_data, data_size);
+  return ML_ERROR_NONE;
+}
+
+/**
+ * @brief Replaces a tensor data in the data handle.
+ */
+int
+ml_tensors_data_replace_tensor_data (ml_tensors_data_h data, unsigned int index,
+    void *raw_data, const size_t data_size)
+{
+  int status;
+  ml_tensors_data_s *_data;
+
+  status = _ml_tensors_data_validate_data (data, index, raw_data, data_size);
+  if (status != ML_ERROR_NONE)
+    return status;
+
+  _data = (ml_tensors_data_s *) data;
+
+  g_free (_data->tensors[index].tensor);
+  _data->tensors[index].tensor = raw_data;
   return ML_ERROR_NONE;
 }
 

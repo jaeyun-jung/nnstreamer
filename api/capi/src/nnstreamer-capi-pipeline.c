@@ -2023,7 +2023,7 @@ ml_pipeline_custom_invoke (void *data, const GstTensorFilterProperties * prop,
     return -1;
 
   /* prepare invoke */
-  status = ml_tensors_data_create_no_alloc (c->in_info, &in_data);
+  status = ml_tensors_data_create_empty (c->in_info, &in_data);
   if (status != ML_ERROR_NONE)
     goto done;
 
@@ -2031,7 +2031,7 @@ ml_pipeline_custom_invoke (void *data, const GstTensorFilterProperties * prop,
   for (i = 0; i < _data->num_tensors; i++)
     _data->tensors[i].tensor = in[i].data;
 
-  status = ml_tensors_data_create_no_alloc (c->out_info, &out_data);
+  status = ml_tensors_data_create_empty (c->out_info, &out_data);
   if (status != ML_ERROR_NONE)
     goto done;
 

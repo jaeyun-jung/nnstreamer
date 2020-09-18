@@ -336,15 +336,6 @@ void ml_tensors_info_copy_from_gst (ml_tensors_info_s *ml_info, const GstTensors
 void ml_tensors_info_copy_from_ml (GstTensorsInfo *gst_info, const ml_tensors_info_s *ml_info);
 
 /**
- * @brief Creates a tensor data frame without buffer with the given tensors information.
- * @details If @a info is null, this allocates data handle with empty tensor data.
- * @param[in] info The handle of tensors information for the allocation.
- * @param[out] data The handle of tensors data.
- * @return @c 0 on success. Otherwise a negative error value.
- */
-int ml_tensors_data_create_no_alloc (const ml_tensors_info_h info, ml_tensors_data_h *data);
-
-/**
  * @brief Creates a tensor data frame without allocating new buffer cloning the given tensors data.
  * @details If @a data_src is null, this returns error.
  * @param[in] data_src The handle of tensors data to be cloned.
