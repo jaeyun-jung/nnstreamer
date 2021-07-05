@@ -91,7 +91,7 @@
 
 GST_DEBUG_CATEGORY_STATIC (gst_tensor_transform_debug);
 #define GST_CAT_DEFAULT gst_tensor_transform_debug
-#define CAPS_STRING GST_TENSOR_CAP_DEFAULT ";" GST_TENSORS_CAP_DEFAULT ";" GST_TENSORS_FLEX_CAP_DEFAULT
+#define CAPS_STRING GST_TENSOR_CAP_DEFAULT ";" GST_TENSORS_CAP_MAKE ("{ static, flexible }")
 #define REGEX_DIMCHG_OPTION "^([0-3]):([0-3])$"
 #define REGEX_TYPECAST_OPTION "(^[u]?int(8|16|32|64)$|^float(32|64)$)"
 #define REGEX_TRANSPOSE_OPTION "^(?:([0-2]):(?!.*\\1)){3}3$"
